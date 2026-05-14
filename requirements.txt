@@ -1,0 +1,22 @@
+# ============================================================
+# Dependências Python — Portfólio de Análise de Dados
+# ============================================================
+# Instale com: pip install -r requirements.txt
+
+# Manipulação de dados
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Visualização
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Otimização matemática (DEA)
+scipy>=1.11.0
+
+# Exportação Excel
+openpyxl>=3.1.0
+xlsxwriter>=3.1.0
+
+# Utilitários
+python-dateutil>=2.8.0
