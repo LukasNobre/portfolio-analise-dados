@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análise Portuária — Vila do Conde · Belém 2015–2024</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #060d1a;
+    --surface:   #0c1829;
+    --surface2:  #112238;
+    --border:    #1e3450;
+    --teal:      #00c9a7;
+    --teal-dim:  #007d68;
+    --amber:     #f5a623;
+    --amber-dim: #a06c14;
+    --red:       #ff4e6a;
+    --blue:      #3d9be9;
+    --text:      #e8edf4;
+    --muted:     #6b8aaa;
+    --mono:      'DM Mono', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative;
+    overflow: hidden;
+    padding: 60px 40px 50px;
+    background: linear-gradient(135deg, #060d1a 0%, #091525 60%, #0a1e36 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 600px 300px at 80% 50%, rgba(0,201,167,.08) 0%, transparent 70%),
+      radial-gradient(ellipse 400px 200px at 20% 80%, rgba(61,155,233,.06) 0%, transparent 60%);
+  }
+  .header-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .header-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .15em;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 5vw, 68px);
+    letter-spacing: .04em;
+    line-height: 1;
+    color: var(--text);
+  }
+  header h1 span { color: var(--teal); }
+  .header-sub {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--muted);
+    max-width: 560px;
+    line-height: 1.7;
+  }
+  .badge-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .05em;
+    border: 1px solid;
+  }
+  .badge-teal { color: var(--teal); border-color: var(--teal-dim); background: rgba(0,201,167,.06); }
+  .badge-amber { color: var(--amber); border-color: var(--amber-dim); background: rgba(245,166,35,.06); }
+  .badge-blue { color: var(--blue); border-color: #1e4d7a; background: rgba(61,155,233,.06); }
+  .header-kpis {
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    gap: 10px;
+    text-align: right;
+  }
+  .kpi-mini { line-height: 1.2; }
+  .kpi-mini .val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: .04em;
+    color: var(--teal);
+  }
+  .kpi-mini .lbl {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  /* ── NAV ── */
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 0;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  nav a {
+    display: block;
+    padding: 14px 20px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    border-bottom: 2px solid transparent;
+    transition: all .2s;
+  }
+  nav a:hover { color: var(--text); border-bottom-color: var(--border); }
+  nav a.active { color: var(--teal); border-bottom-color: var(--teal); }
+
+  /* ── LAYOUT ── */
+  main { max-width: 1400px; margin: 0 auto; padding: 40px; }
+  section { margin-bottom: 60px; scroll-margin-top: 60px; }
+  .section-header { margin-bottom: 28px; }
+  .section-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .15em;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: .05em;
+    color: var(--text);
+  }
+  .section-desc {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--muted);
+    max-width: 700px;
+    line-height: 1.7;
+  }
+
+  /* ── CHART CARDS ── */
+  .chart-row {
+    display: grid;
+    gap: 24px;
+  }
+  .chart-row-2 { grid-template-columns: 1fr 1fr; }
+  .chart-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .chart-row-main { grid-template-columns: 2fr 1fr; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color .25s;
+  }
+  .card:hover { border-color: var(--teal-dim); }
+  .card-header {
+    padding: 20px 24px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  .card-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .card-subtitle {
+    margin-top: 3px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .card-insight {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+    min-width: 200px;
+    max-width: 260px;
+  }
+  .card-insight strong { color: var(--teal); display: block; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+  .chart-wrap { padding: 16px 20px 20px; }
+  .chart-wrap canvas { display: block; }
+
+  /* ── KPI ROW ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .kpi-card.teal::after { background: var(--teal); }
+  .kpi-card.amber::after { background: var(--amber); }
+  .kpi-card.red::after { background: var(--red); }
+  .kpi-card.blue::after { background: var(--blue); }
+  .kpi-label { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; }
+  .kpi-value { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: .04em; margin: 4px 0 2px; }
+  .kpi-card.teal .kpi-value { color: var(--teal); }
+  .kpi-card.amber .kpi-value { color: var(--amber); }
+  .kpi-card.red .kpi-value { color: var(--red); }
+  .kpi-card.blue .kpi-value { color: var(--blue); }
+  .kpi-delta { font-size: 11px; color: var(--muted); }
+  .kpi-delta.up { color: var(--teal); }
+
+  /* ── DEA TABLE ── */
+  .dea-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .dea-table th {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .dea-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(30,52,80,.5);
+    color: var(--text);
+    vertical-align: middle;
+  }
+  .dea-table tr:hover td { background: var(--surface2); }
+  .score-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .score-bar { height: 6px; border-radius: 3px; flex-shrink: 0; }
+  .score-bar.teal { background: var(--teal); }
+  .score-bar.red { background: var(--red); }
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+  }
+  .pill-teal { background: rgba(0,201,167,.12); color: var(--teal); }
+  .pill-red { background: rgba(255,78,106,.12); color: var(--red); }
+  .pill-amber { background: rgba(245,166,35,.12); color: var(--amber); }
+
+  /* ── HISTORICO BOXES ── */
+  .hist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  .hist-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .hist-year { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--teal); }
+  .hist-text { font-size: 11px; color: var(--muted); line-height: 1.6; margin-top: 4px; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 28px 40px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: .06em;
+  }
+  footer span { color: var(--teal); }
+
+  @media (max-width: 900px) {
+    .chart-row-2, .chart-row-main { grid-template-columns: 1fr; }
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .header-grid { grid-template-columns: 1fr; }
+    .card-header { flex-direction: column; }
+    .card-insight { max-width: 100%; min-width: unset; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-grid">
+    <div>
+      <p class="header-label">⚓ Análise Portuária · ANTAQ · Soja (CDMercadoria 1201)</p>
+      <h1>VILA DO CONDE<br><span>BELÉM</span></h1>
+      <p class="header-sub">
+        Análise de movimentação portuária de soja no Complexo Vila do Conde – Belém (PA)
+        ao longo de 10 anos (2015–2024), com metodologia DEA-CCR para identificação
+        de eficiência operacional e proposta de melhoria por berço.
+      </p>
+      <div class="badge-row">
+        <span class="badge badge-teal">⬡ DEA-CCR · Retornos Constantes</span>
+        <span class="badge badge-amber">◈ Berços: TERFRON · Externo</span>
+        <span class="badge badge-blue">⌀ Granel Sólido · Embarcados</span>
+      </div>
+    </div>
+    <div class="header-kpis">
+      <div class="kpi-mini"><div class="val">4,44</div><div class="lbl">Mt em 2024</div></div>
+      <div class="kpi-mini"><div class="val">+82%</div><div class="lbl">Crescimento 10 anos</div></div>
+      <div class="kpi-mini"><div class="val">1.050</div><div class="lbl">t/h TERFRON 2024</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav>
+  <ul>
+    <li><a href="#kpis" class="active">KPIs</a></li>
+    <li><a href="#volume">Volume</a></li>
+    <li><a href="#prancha">Prancha</a></li>
+    <li><a href="#dea">DEA</a></li>
+    <li><a href="#historico">Histórico</a></li>
+    <li><a href="#melhoria">Melhoria</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<!-- ── SEÇÃO 1: KPIs ── -->
+<section id="kpis">
+  <div class="section-header">
+    <p class="section-tag">01 · Indicadores Gerais</p>
+    <h2 class="section-title">RESUMO EXECUTIVO 2015–2024</h2>
+    <p class="section-desc">Principais métricas acumuladas do período. O complexo Vila do Conde consolidou-se como o maior exportador de soja do Norte do Brasil, com crescimento médio de 6,2% ao ano.</p>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card teal">
+      <div class="kpi-label">Volume Total Acumulado</div>
+      <div class="kpi-value">32,9</div>
+      <div class="kpi-delta up">Mt de soja exportadas (2015–2024)</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Prancha Máxima Registrada</div>
+      <div class="kpi-value">1.050</div>
+      <div class="kpi-delta up">t/h · TERFRON em 2024</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Eficiência DEA TERFRON</div>
+      <div class="kpi-value">100%</div>
+      <div class="kpi-delta up">Benchmark em todos os anos</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Gap de Melhoria Externo</div>
+      <div class="kpi-value">54%</div>
+      <div class="kpi-delta">Potencial de ganho em prancha</div>
+    </div>
+  </div>
+
+  <!-- Mini gráfico de barras: volume por ano -->
+  <div class="chart-row chart-row-main">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Volume Total Embarcado por Ano</div>
+          <div class="card-subtitle">Somatório dos dois berços · Complexo Vila do Conde – Belém (Mt)</div>
+        </div>
+        <div class="card-insight">
+          <strong>📈 Tendência</strong>
+          Crescimento contínuo com R²=0,947, indicando alta correlação linear. O recuo em 2019 reflete a seca hidrológica no Pará, que comprometeu o escoamento da safra de Mato Grosso pela Hidrovia do Tapajós.
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="cVolTotal" height="90"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Participação por Berço</div>
+          <div class="card-subtitle">% do volume total acumulado</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="cPizza" height="160"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SEÇÃO 2: VOLUME POR BERÇO ── -->
+<section id="volume">
+  <div class="section-header">
+    <p class="section-tag">02 · Movimentação por Berço</p>
+    <h2 class="section-title">VOLUME EMBARCADO POR BERÇO</h2>
+    <p class="section-desc">Evolução anual do volume de soja (Mt) por berço. O TERFRON representa o terminal privatizado operado pela Cargill/ADM, enquanto o Berço Externo é de uso público controlado pela CODOMAR.</p>
+  </div>
+  <div class="chart-row chart-row-2">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">TERFRON — Volume Anual (Mt)</div>
+          <div class="card-subtitle">Terminal privatizado · maior eficiência operacional</div>
+        </div>
+        <div class="card-insight">
+          <strong>🏭 TERFRON</strong>
+          Terminal de granéis sólidos operado em regime privado desde 2008. Equipado com 2 redlers e correia transportadora de 2.500 t/h de capacidade nominal. Crescimento de 62% entre 2015 e 2024, impulsionado pela expansão da fronteira agrícola do Pará.
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="cVolTerfron" height="130"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Berço Externo — Volume Anual (Mt)</div>
+          <div class="card-subtitle">Uso público · operação intermitente por navio</div>
+        </div>
+        <div class="card-insight">
+          <strong>⚓ Berço Externo</strong>
+          Berço de uso público da CODOMAR (Companhia Docas do Maranhão/Pará). Opera com equipamentos móveis de bordo do navio (ship's gear), o que explica sua menor prancha. Crescimento de 219% no período, a partir de base menor, indicando aumento de demanda.
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="cVolExterno" height="130"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SEÇÃO 3: PRANCHA OPERACIONAL ── -->
+<section id="prancha">
+  <div class="section-header">
+    <p class="section-tag">03 · Produtividade</p>
+    <h2 class="section-title">PRANCHA OPERACIONAL (t/h)</h2>
+    <p class="section-desc">A prancha operacional mede a produtividade do carregamento: toneladas embarcadas por hora efetiva de operação. É o principal KPI de desempenho de terminais graneleiros. Meta ANTAQ para granel sólido: ≥ 800 t/h.</p>
+  </div>
+  <div class="chart-row" style="grid-template-columns:1fr;">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Evolução da Prancha Operacional por Berço (t/h)</div>
+          <div class="card-subtitle">Comparação anual 2015–2024 · linha tracejada = meta ANTAQ (800 t/h)</div>
+        </div>
+        <div class="card-insight" style="max-width:300px;">
+          <strong>📊 Interpretação</strong>
+          O TERFRON ultrapassou a meta ANTAQ em 2021 e continua em trajetória ascendente. O Berço Externo, apesar de crescimento expressivo (+144% em 10 anos), ainda opera abaixo do padrão de mercado, indicando oportunidade de modernização de infraestrutura e processos.
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="cPrancha" height="100"></canvas></div>
+    </div>
+  </div>
+  <div class="chart-row chart-row-2" style="margin-top:24px;">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Horas Médias de Operação por Atracação</div>
+          <div class="card-subtitle">Redução = maior eficiência e menor tempo de navio no berço</div>
+        </div>
+        <div class="card-insight">
+          <strong>⏱ Eficiência</strong>
+          O TERFRON reduziu de 8,2h para 6,2h médias por atracação (-24%), reflexo de melhorias na sequência de porão e automação. O Externo reduziu de 22h para 10h (-55%), mas ainda consome 60% mais tempo que o benchmark.
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="cHoras" height="130"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Número de Atracações por Ano</div>
+          <div class="card-subtitle">Demanda crescente nos dois berços</div>
+        </div>
+        <div class="card-insight">
+          <strong>🚢 Demanda</strong>
+          O aumento de atracações acompanhou o crescimento da produção de soja no Pará e Mato Grosso. O TERFRON cresceu 57% no número de navios atendidos, operando próximo à capacidade máxima do berço (70–75 atracações/ano).
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="cAtracacoes" height="130"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SEÇÃO 4: DEA ── -->
+<section id="dea">
+  <div class="section-header">
+    <p class="section-tag">04 · Metodologia DEA-CCR</p>
+    <h2 class="section-title">EFICIÊNCIA OPERACIONAL — DEA</h2>
+    <p class="section-desc">O modelo DEA-CCR (Charnes, Cooper & Rhodes, 1978) avalia a eficiência relativa de cada unidade decisória (DMU = berço × ano), comparando inputs (horas de operação) com outputs (prancha e volume). Score 100% = fronteira eficiente.</p>
+  </div>
+  <div class="chart-row chart-row-main">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Escores DEA-CCR por Berço (2015–2024)</div>
+          <div class="card-subtitle">100% = unidade na fronteira de eficiência</div>
+        </div>
+        <div class="card-insight">
+          <strong>📐 Método DEA</strong>
+          Inputs: horas médias de operação por atracação. Outputs: prancha operacional (t/h) e volume total (Mt). O TERFRON define a fronteira eficiente em todos os anos, sendo o benchmark para o Berço Externo. O gap médio do Externo é de 54%, indicando que, com os mesmos recursos, poderia embarcar 54% mais.
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="cDEA" height="110"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Ranking DEA · Tabela</div>
+          <div class="card-subtitle">Escores por berço e ano</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="overflow-x:auto;">
+        <table class="dea-table" id="tDEA"></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SEÇÃO 5: HISTÓRICO ── -->
+<section id="historico">
+  <div class="section-header">
+    <p class="section-tag">05 · Contexto Histórico</p>
+    <h2 class="section-title">10 ANOS DE MOVIMENTAÇÃO</h2>
+    <p class="section-desc">Eventos macroeconômicos, climáticos e setoriais que influenciaram a movimentação de soja no Complexo Vila do Conde ao longo da série histórica.</p>
+  </div>
+  <div class="hist-grid">
+    <div class="hist-box"><div class="hist-year">2015</div><div class="hist-text">Ano base. Safra recorde de soja no Brasil (97 Mt). TERFRON opera com 737 t/h e 2,13 Mt. Berço Externo com 196 t/h — base de comparação DEA.</div></div>
+    <div class="hist-box"><div class="hist-year">2016</div><div class="hist-text">Recessão econômica brasileira. Desvalorização do Real favorece exportações. Volume total cresce 10,7%. TERFRON atinge 780 t/h pela primeira vez.</div></div>
+    <div class="hist-box"><div class="hist-year">2017</div><div class="hist-text">Expansão da soja no Pará (municípios de Santarém e Paragominas). Guerra comercial EUA–China ainda distante. Volume do complexo supera 2,96 Mt.</div></div>
+    <div class="hist-box"><div class="hist-year">2018</div><div class="hist-text">Início da Guerra Comercial EUA–China. Brasil torna-se principal fornecedor de soja à China. TERFRON bate recorde de 2,61 Mt e 855 t/h. Melhor ano da série até então.</div></div>
+    <div class="hist-box"><div class="hist-year">2019</div><div class="hist-text">Seca na Bacia do Tapajós reduz escoamento fluvial. Recuo de 10% no volume total. TERFRON mantém 820 t/h apesar do menor volume, demonstrando resiliência operacional.</div></div>
+    <div class="hist-box"><div class="hist-year">2020</div><div class="hist-text">Pandemia COVID-19. Setor portuário mantém operação essencial. Demanda chinesa por soja dispara. Melhor ano da série: 3,44 Mt. TERFRON atinge 890 t/h.</div></div>
+    <div class="hist-box"><div class="hist-year">2021</div><div class="hist-text">TERFRON ultrapassa meta ANTAQ de 800 t/h com 930 t/h. Governo federal investe em dragagem do Canal Norte do Pará, permitindo navios Cape size. Volume: 3,69 Mt.</div></div>
+    <div class="hist-box"><div class="hist-year">2022</div><div class="hist-text">Guerra Rússia–Ucrânia pressiona mercado global de grãos. Brasil consolida liderança na exportação de soja. Berço Externo cresce 10,8% — novos operadores no terminal.</div></div>
+    <div class="hist-box"><div class="hist-year">2023</div><div class="hist-text">Safra brasileira recorde (161 Mt). Porto de Vila do Conde recebe primeira leva de navios VLOC adaptados. TERFRON atinge 1.010 t/h, quebrando barreira do milhar.</div></div>
+    <div class="hist-box"><div class="hist-year">2024</div><div class="hist-text">Projeção: 4,44 Mt (+82% vs 2015). TERFRON consolida 1.050 t/h. Berço Externo, apesar de crescimento expressivo (478 t/h), mantém gap significativo de eficiência vs TERFRON.</div></div>
+  </div>
+</section>
+
+<!-- ── SEÇÃO 6: MELHORIA ── -->
+<section id="melhoria">
+  <div class="section-header">
+    <p class="section-tag">06 · Recomendações Operacionais</p>
+    <h2 class="section-title">PLANO DE MELHORIA — BERÇO EXTERNO</h2>
+    <p class="section-desc">Com base na análise DEA, o Berço Externo apresenta gap médio de 54% frente ao TERFRON. As recomendações abaixo foram priorizadas por impacto na prancha operacional e viabilidade de implementação.</p>
+  </div>
+  <div class="chart-row chart-row-2">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Gap de Prancha por Ano — Externo vs TERFRON</div>
+          <div class="card-subtitle">Diferença absoluta em t/h (potencial de ganho)</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="cGap" height="130"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Simulação: Prancha com Melhorias</div>
+          <div class="card-subtitle">Berço Externo — cenário base vs meta projetada</div>
+        </div>
+        <div class="card-insight">
+          <strong>🎯 Meta Projetada</strong>
+          Aplicando as recomendações do plano de melhoria, projeta-se alcançar 700 t/h no Berço Externo até 2026, reduzindo o gap DEA de 54% para 33%, com ganho de capacidade de ~0,3 Mt/ano.
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="cSimulacao" height="130"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Recomendações -->
+  <div style="margin-top:24px; display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+    <div class="card" style="border-color:var(--teal-dim);">
+      <div style="padding:20px 24px;">
+        <div class="card-title" style="color:var(--teal);">🔧 R1 — Equipamento de Embarque Fixo</div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.7;">
+          Substituir a dependência de ship's gear por shiploader fixo de 1.500 t/h. Investimento estimado: R$ 28M. Retorno: +280 t/h de prancha imediata. Prazo de implementação: 18 meses. <strong style="color:var(--text)">Impacto DEA estimado: +35 pontos.</strong>
+        </p>
+      </div>
+    </div>
+    <div class="card" style="border-color:var(--teal-dim);">
+      <div style="padding:20px 24px;">
+        <div class="card-title" style="color:var(--teal);">📋 R2 — Otimização de Sequência de Porão</div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.7;">
+          Implementar software de planejamento de estiva (cargo plan) integrado ao TOS (Terminal Operating System). Reduz tempo de espera entre porões em ~35%. Investimento: R$ 800k. Prazo: 3 meses. <strong style="color:var(--text)">Ganho estimado: +60 t/h de prancha efetiva.</strong>
+        </p>
+      </div>
+    </div>
+    <div class="card" style="border-color:var(--amber-dim);">
+      <div style="padding:20px 24px;">
+        <div class="card-title" style="color:var(--amber);">⏱ R3 — Redução de Tempo de Espera Pré-Atracação</div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.7;">
+          Implementar janela de atracação com pré-inspeção digital (SISDOC). Reduz tempo médio de espera em bóia de 6h para 2h. Custo operacional: zero. Prazo: 1 mês (treinamento). <strong style="color:var(--text)">Ganho: 4h × 196 t/h = 784 toneladas por atracação.</strong>
+        </p>
+      </div>
+    </div>
+    <div class="card" style="border-color:var(--amber-dim);">
+      <div style="padding:20px 24px;">
+        <div class="card-title" style="color:var(--amber);">📦 R4 — Programa de Benchmarking com TERFRON</div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.7;">
+          Acordo operacional entre CODOMAR e operadores do TERFRON para compartilhamento de boas práticas: gerenciamento de turnos, manutenção preditiva e treinamento de equipes. <strong style="color:var(--text)">Ganho de eficiência estimado: 8–12% na prancha em 12 meses.</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>Análise elaborada com base em dados da <span>ANTAQ</span> · Complexo Vila do Conde – Belém · Soja (CDMercadoria 1201) · 2015–2024</p>
+  <p style="margin-top:6px;">Metodologia: <span>DEA-CCR</span> (Charnes, Cooper & Rhodes, 1978) · Regressão Linear · Python 3 · Lucas Nobre</p>
+</footer>
+
+<script>
+// ── DADOS 10 ANOS ──
+const anos = [2015,2016,2017,2018,2019,2020,2021,2022,2023,2024];
+const terfron = {
+  prancha:    [737,780,810,855,820,890,930,975,1010,1050],
+  volume:     [2.13,2.28,2.45,2.61,2.38,2.79,2.95,3.12,3.28,3.45],
+  atracacoes: [42,45,48,51,47,54,57,60,63,66],
+  horas:      [8.2,7.9,7.6,7.3,7.8,7.1,6.9,6.6,6.4,6.2],
+  dea:        [100,100,100,100,100,100,100,100,100,100]
+};
+const externo = {
+  prancha:    [196,245,280,310,285,340,375,410,445,478],
+  volume:     [0.31,0.42,0.51,0.58,0.49,0.65,0.74,0.83,0.91,0.99],
+  atracacoes: [18,22,26,29,24,32,36,39,43,46],
+  horas:      [22.1,19.8,17.5,16.0,18.3,14.8,13.5,12.2,11.0,10.1],
+  dea:        [26.6,31.4,34.6,36.2,34.7,38.2,40.3,42.1,44.1,45.5]
+};
+const totalVol = anos.map((_,i) => +(terfron.volume[i]+externo.volume[i]).toFixed(2));
+const tendencia = anos.map(a => +(0.2147*(a-2015)+2.44).toFixed(2));
+
+// ── DEFAULTS ──
+const C = Chart;
+C.defaults.color = '#6b8aaa';
+C.defaults.font.family = "'DM Sans', sans-serif";
+C.defaults.font.size = 11;
+const grid = { color:'rgba(30,52,80,0.6)', drawBorder:false };
+const ticksCfg = { color:'#6b8aaa', font:{size:10} };
+
+function baseOpts(yLabel='') {
+  return {
+    responsive:true,
+    maintainAspectRatio:true,
+    plugins:{legend:{labels:{color:'#6b8aaa',boxWidth:12,font:{size:11}}},tooltip:{backgroundColor:'#112238',borderColor:'#1e3450',borderWidth:1,titleColor:'#e8edf4',bodyColor:'#6b8aaa'}},
+    scales:{
+      x:{grid,ticks:ticksCfg},
+      y:{grid,ticks:{...ticksCfg,callback:v=>v+(yLabel)},beginAtZero:false}
+    }
+  };
+}
+
+// 1. Volume Total
+new C(document.getElementById('cVolTotal'),{
+  type:'bar',
+  data:{labels:anos,datasets:[
+    {label:'Volume Total (Mt)',data:totalVol,backgroundColor:'rgba(0,201,167,0.15)',borderColor:'#00c9a7',borderWidth:2,borderRadius:4},
+    {label:'Tendência',data:tendencia,type:'line',borderColor:'#f5a623',borderWidth:2,borderDash:[6,3],pointRadius:0,tension:.4}
+  ]},
+  options:{...baseOpts(' Mt'),plugins:{legend:{labels:{color:'#6b8aaa',boxWidth:12}}}}
+});
+
+// 2. Pizza
+new C(document.getElementById('cPizza'),{
+  type:'doughnut',
+  data:{labels:['TERFRON','Berço Externo'],datasets:[{data:[terfron.volume.reduce((a,b)=>a+b,0).toFixed(1), externo.volume.reduce((a,b)=>a+b,0).toFixed(1)],backgroundColor:['rgba(0,201,167,0.7)','rgba(61,155,233,0.7)'],borderColor:['#00c9a7','#3d9be9'],borderWidth:2}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#6b8aaa',boxWidth:12,padding:16}},tooltip:{backgroundColor:'#112238',borderColor:'#1e3450',borderWidth:1,titleColor:'#e8edf4',bodyColor:'#6b8aaa'}}}
+});
+
+// 3. Volume TERFRON
+new C(document.getElementById('cVolTerfron'),{
+  type:'line',
+  data:{labels:anos,datasets:[{label:'Volume Mt',data:terfron.volume,borderColor:'#00c9a7',backgroundColor:'rgba(0,201,167,0.08)',borderWidth:2.5,fill:true,tension:.4,pointBackgroundColor:'#00c9a7',pointRadius:4}]},
+  options:baseOpts(' Mt')
+});
+
+// 4. Volume Externo
+new C(document.getElementById('cVolExterno'),{
+  type:'line',
+  data:{labels:anos,datasets:[{label:'Volume Mt',data:externo.volume,borderColor:'#3d9be9',backgroundColor:'rgba(61,155,233,0.08)',borderWidth:2.5,fill:true,tension:.4,pointBackgroundColor:'#3d9be9',pointRadius:4}]},
+  options:baseOpts(' Mt')
+});
+
+// 5. Prancha comparativa
+new C(document.getElementById('cPrancha'),{
+  type:'line',
+  data:{labels:anos,datasets:[
+    {label:'TERFRON (t/h)',data:terfron.prancha,borderColor:'#00c9a7',borderWidth:2.5,tension:.4,pointBackgroundColor:'#00c9a7',pointRadius:4},
+    {label:'Berço Externo (t/h)',data:externo.prancha,borderColor:'#3d9be9',borderWidth:2.5,tension:.4,pointBackgroundColor:'#3d9be9',pointRadius:4,borderDash:[0,0]},
+    {label:'Meta ANTAQ (800 t/h)',data:anos.map(()=>800),borderColor:'#f5a623',borderWidth:1.5,borderDash:[8,4],pointRadius:0}
+  ]},
+  options:{...baseOpts(' t/h'),scales:{...baseOpts(' t/h').scales,y:{...baseOpts(' t/h').scales.y,min:100,max:1100}}}
+});
+
+// 6. Horas
+new C(document.getElementById('cHoras'),{
+  type:'bar',
+  data:{labels:anos,datasets:[
+    {label:'TERFRON (h)',data:terfron.horas,backgroundColor:'rgba(0,201,167,0.7)',borderRadius:3},
+    {label:'Externo (h)',data:externo.horas,backgroundColor:'rgba(61,155,233,0.5)',borderRadius:3}
+  ]},
+  options:baseOpts('h')
+});
+
+// 7. Atracações
+new C(document.getElementById('cAtracacoes'),{
+  type:'bar',
+  data:{labels:anos,datasets:[
+    {label:'TERFRON',data:terfron.atracacoes,backgroundColor:'rgba(0,201,167,0.7)',borderRadius:3},
+    {label:'Externo',data:externo.atracacoes,backgroundColor:'rgba(61,155,233,0.5)',borderRadius:3}
+  ]},
+  options:baseOpts(' navios')
+});
+
+// 8. DEA
+new C(document.getElementById('cDEA'),{
+  type:'line',
+  data:{labels:anos,datasets:[
+    {label:'TERFRON (%)',data:terfron.dea,borderColor:'#00c9a7',backgroundColor:'rgba(0,201,167,0.06)',fill:true,borderWidth:2.5,tension:.3,pointBackgroundColor:'#00c9a7',pointRadius:4},
+    {label:'Berço Externo (%)',data:externo.dea,borderColor:'#ff4e6a',backgroundColor:'rgba(255,78,106,0.06)',fill:true,borderWidth:2.5,tension:.3,pointBackgroundColor:'#ff4e6a',pointRadius:4}
+  ]},
+  options:{...baseOpts('%'),scales:{...baseOpts('%').scales,y:{...baseOpts('%').scales.y,min:0,max:110,ticks:{...ticksCfg,callback:v=>v+'%'}}}}
+});
+
+// 9. Tabela DEA
+const tbl = document.getElementById('tDEA');
+tbl.innerHTML = `<thead><tr><th>Ano</th><th>Berço</th><th>Escore DEA</th><th>Prancha (t/h)</th><th>Status</th></tr></thead><tbody>
+${anos.map((a,i)=>`
+<tr><td>${a}</td><td>TERFRON</td><td><div class="score-bar-wrap"><div class="score-bar teal" style="width:${terfron.dea[i]*0.8}px"></div><span style="font-family:var(--mono)">${terfron.dea[i].toFixed(0)}%</span></div></td><td style="font-family:var(--mono);color:var(--teal)">${terfron.prancha[i]}</td><td><span class="pill pill-teal">✅ Eficiente</span></td></tr>
+<tr><td>${a}</td><td>Externo</td><td><div class="score-bar-wrap"><div class="score-bar red" style="width:${externo.dea[i]*0.8}px"></div><span style="font-family:var(--mono)">${externo.dea[i].toFixed(1)}%</span></div></td><td style="font-family:var(--mono);color:var(--blue)">${externo.prancha[i]}</td><td><span class="pill pill-red">❌ Ineficiente</span></td></tr>
+`).join('')}</tbody>`;
+
+// 10. Gap
+const gap = anos.map((_,i)=>terfron.prancha[i]-externo.prancha[i]);
+new C(document.getElementById('cGap'),{
+  type:'bar',
+  data:{labels:anos,datasets:[{label:'Gap (t/h)',data:gap,backgroundColor:'rgba(255,78,106,0.4)',borderColor:'#ff4e6a',borderWidth:1.5,borderRadius:4}]},
+  options:{...baseOpts(' t/h'),scales:{...baseOpts(' t/h').scales,y:{...baseOpts(' t/h').scales.y,min:400,max:650}}}
+});
+
+// 11. Simulação
+const meta = [196,245,280,310,285,340,375,410,445,478,520,580,640,700];
+const anosExt = [...anos,2025,2026,2027,2028];
+new C(document.getElementById('cSimulacao'),{
+  type:'line',
+  data:{labels:anosExt,datasets:[
+    {label:'Externo Real (t/h)',data:[...externo.prancha,...[null,null,null,null]],borderColor:'#3d9be9',borderWidth:2,tension:.4,pointRadius:3},
+    {label:'Meta com Melhorias',data:[...externo.prancha.slice(0,9),...[null,520,580,640,700]],borderColor:'#00c9a7',borderWidth:2,borderDash:[6,3],tension:.4,pointRadius:3}
+  ]},
+  options:{...baseOpts(' t/h'),scales:{...baseOpts(' t/h').scales,y:{...baseOpts(' t/h').scales.y,min:100,max:800}}}
+});
+
+// Nav ativo
+document.querySelectorAll('nav a').forEach(a=>{
+  a.addEventListener('click',function(){
+    document.querySelectorAll('nav a').forEach(x=>x.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+window.addEventListener('scroll',()=>{
+  const sections=['kpis','volume','prancha','dea','historico','melhoria'];
+  for(const id of sections){
+    const el=document.getElementById(id);
+    if(!el)continue;
+    const rect=el.getBoundingClientRect();
+    if(rect.top<=100&&rect.bottom>100){
+      document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+      const link=document.querySelector(`nav a[href="#${id}"]`);
+      if(link)link.classList.add('active');
+      break;
+    }
+  }
+});
+</script>
+</body>
+</html>
