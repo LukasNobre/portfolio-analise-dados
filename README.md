@@ -171,9 +171,9 @@ output_lean6sigma/
 
 ## 👤 Autor
 
-**[Seu Nome]**  
-📧 seu.email@email.com  
-🔗 [LinkedIn](https://linkedin.com/in/seu-perfil)  
+**[Lucas Nobre]**  
+📧 lukasnobre@hotmail.com 
+🔗 [LinkedIn]([https://linkedin.com/in/seu-perfil](https://www.linkedin.com/in/lucas-nobre-siqueira/))  
 🐙 [GitHub](https://github.com/seu-usuario)
 
 ---
